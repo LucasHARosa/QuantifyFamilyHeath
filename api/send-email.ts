@@ -233,6 +233,8 @@ function generateEmailHTML(data: FormData): string {
 }
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Resend } from "resend";
+
 // Helper para extrair texto simples do HTML
 function htmlToPlainText(html: string): string {
   return html
@@ -259,12 +261,12 @@ function createFormDataPayload(data: Record<string, string>): string {
     .join("&");
 }
 
-// Envio secundário para FormSubmit (não bloqueia o principal)
+// Envio secundário para FormSubmit (backup/fallback)
 async function sendToFormSubmit(
   emailHTML: string,
   subject: string,
   titular: any,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const formSubmitEmail =
       process.env.RECIPIENT_EMAIL || "rosacode9@gmail.com";
@@ -272,7 +274,8 @@ async function sendToFormSubmit(
     // Preparar dados em formato application/x-www-form-urlencoded
     const formData: Record<string, string> = {
       subject: subject,
-      message: emailHTML,
+      message: htmlToPlainText(emailHTML), // Converter HTML para texto
+      _html: emailHTML, // Também enviar HTML
       _replyto: titular.email || "",
       _template: "box", // Template básico do FormSubmit
       _captcha: "false", // Desabilita captcha (já temos validação)
@@ -285,8 +288,6 @@ async function sendToFormSubmit(
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Accept: "application/json",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
       body: formDataString,
     });
@@ -294,12 +295,14 @@ async function sendToFormSubmit(
     if (!response.ok) {
       const errorText = await response.text();
       console.error("FormSubmit error:", response.status, errorText);
-    } else {
-      console.log("FormSubmit: Email enviado com sucesso (secundário)");
+      return false;
     }
+
+    console.log("FormSubmit: Email enviado com sucesso (backup)");
+    return true;
   } catch (error) {
-    // Apenas loga o erro, não interrompe o fluxo
-    console.error("FormSubmit failed (non-blocking):", error);
+    console.error("FormSubmit failed:", error);
+    return false;
   }
 }
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -346,113 +349,83 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Web3Forms API call
-    const WEB3FORMS_ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY;
+    // Verificar configuração do Resend
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-    if (!WEB3FORMS_ACCESS_KEY) {
-      console.error("WEB3FORMS_ACCESS_KEY não configurada");
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY não configurada");
       return res.status(500).json({
         success: false,
         message: "Configuração de email não encontrada",
       });
     }
 
+    // Gerar conteúdo do email
     const emailHTML = generateEmailHTML(formData);
     const planLabel = safeLabel(formData.selectedPlan, PLAN_LABELS);
-    const planTypeLabel =
-      formData.planType === "family"
-        ? "Familiar"
-        : formData.planType === "individual"
-          ? "Individual"
-          : "Não informado";
-
-    // Reply-To ideal: email do titular (para responder direto)
-    const replyTo = titular.email || undefined;
-
-    // Payload Web3Forms - enviando como JSON
-    const payload: Record<string, any> = {
-      access_key: WEB3FORMS_ACCESS_KEY,
-      subject: `Nova Cotação - ${titular.fullName} - ${planLabel}`,
-      from_name: "Quantify - Sistema de Cotações",
-      message: emailHTML,
-
-      // Campos adicionais (opcional)
-      planType: planTypeLabel,
-      familySize: String(formData.familySize),
-      contactPreference: safeLabel(formData.contactPreference, CONTACT_LABELS),
-      titular: titular.fullName,
-      titularPhone: titular.phone,
-      titularEmail: titular.email,
-      titularCity: `${titular.city} - ${titular.state}`,
-    };
-
-    if (replyTo) {
-      payload.replyto = replyTo;
-    }
+    const subject = `Nova Cotação - ${titular.fullName} - ${planLabel}`;
 
     // ========================================
-    // ENVIO PRINCIPAL: Web3Forms
+    // ENVIO PRINCIPAL: Resend
     // ========================================
-    const response = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Origin: "https://quantifyhealth.vercel.app",
-        Referer: "https://quantifyhealth.vercel.app/",
-      },
-      body: JSON.stringify(payload),
-    });
+    const resend = new Resend(RESEND_API_KEY);
 
-    const resultText = await response.text();
-    let web3FormsSuccess = false;
-    let web3FormsResult = null;
+    let resendSuccess = false;
+    let resendError = null;
 
-    if (!response.ok) {
-      console.error("Web3Forms error:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: resultText.substring(0, 500), // Primeiros 500 chars do erro
+    try {
+      const { data, error } = await resend.emails.send({
+        from: "Quantify <onboarding@resend.dev>", // Sandbox mode
+        to: [process.env.RECIPIENT_EMAIL || "rosacode9@gmail.com"],
+        replyTo: titular.email,
+        subject: subject,
+        html: emailHTML,
       });
-      // Não retorna erro aqui ainda, vamos tentar FormSubmit também
-    } else {
-      try {
-        web3FormsResult = JSON.parse(resultText);
-        web3FormsSuccess = web3FormsResult.success === true;
-        console.log("Web3Forms response:", web3FormsResult);
-      } catch (e) {
-        console.error("Web3Forms JSON parse error:", e);
-        console.log("Web3Forms raw response:", resultText.substring(0, 500));
+
+      if (error) {
+        console.error("Resend error:", error);
+        resendError = error;
+      } else {
+        resendSuccess = true;
+        console.log("Resend: Email enviado com sucesso", data);
       }
+    } catch (error) {
+      console.error("Resend failed:", error);
+      resendError = error;
     }
 
     // ========================================
-    // ENVIO SECUNDÁRIO: FormSubmit (não bloqueia)
+    // FALLBACK: FormSubmit
     // ========================================
-    // Executa em paralelo sem esperar (fire and forget)
-    sendToFormSubmit(
-      emailHTML,
-      `Nova Cotação - ${titular.fullName} - ${planLabel}`,
-      titular,
-    ).catch((err) => {
-      console.error("FormSubmit background error:", err);
-    });
+    let formSubmitSuccess = false;
+
+    if (!resendSuccess) {
+      console.log("Tentando fallback via FormSubmit...");
+      formSubmitSuccess = await sendToFormSubmit(emailHTML, subject, titular);
+    }
 
     // ========================================
     // RETORNO AO CLIENTE
     // ========================================
-    if (!web3FormsSuccess) {
-      return res.status(500).json({
-        success: false,
-        message: "Erro ao enviar email pelo Web3Forms",
+    if (resendSuccess) {
+      return res.status(200).json({
+        success: true,
+        message: "Email enviado com sucesso",
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Email enviado com sucesso",
+    if (formSubmitSuccess) {
+      return res.status(200).json({
+        success: true,
+        message: "Email enviado via serviço alternativo",
+        warning: "Serviço principal temporariamente indisponível",
+      });
+    }
+
+    // Ambos falharam
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao enviar email. Por favor, tente novamente mais tarde.",
     });
   } catch (error) {
     console.error("Error:", error);
