@@ -1,7 +1,7 @@
 // Serverless Function para Vercel/similar
 // Configure estas variáveis de ambiente na sua hospedagem:
-// - SENDGRID_API_KEY: sua chave API do SendGrid
-// - RECIPIENT_EMAIL: email que receberá as cotações (ex: contato@quantifyco.com.br)
+// - WEB3FORMS_ACCESS_KEY: sua chave do Web3Forms
+// - RECIPIENT_EMAIL: opcional (destino pode estar amarrado à key no Web3Forms)
 
 interface PersonData {
   id: string;
@@ -23,35 +23,46 @@ interface FormData {
   consentLGPD: boolean;
   consentPartnerAndContact: boolean;
   selectedPlan: string | null;
+
+  // Anti-spam (honeypot)
+  website?: string;
 }
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
-  titular: 'Titular',
-  conjuge: 'Cônjuge',
-  filho: 'Filho(a)',
-  pai: 'Pai',
-  mae: 'Mãe',
-  outro: 'Outro',
+  titular: "Titular",
+  conjuge: "Cônjuge",
+  filho: "Filho(a)",
+  pai: "Pai",
+  mae: "Mãe",
+  outro: "Outro",
 };
 
 const CONTACT_LABELS: Record<string, string> = {
-  whatsapp: 'WhatsApp',
-  telegram: 'Telegram',
-  phone: 'Telefone',
+  whatsapp: "WhatsApp",
+  telegram: "Telegram",
+  phone: "Telefone",
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  medsenior_rj1: 'MedSênior RJ1',
-  medsenior_essencial: 'MedSênior Essencial',
-  hapvida: 'Hapvida (Notrelife)',
-  prevent_senior: 'Prevent Senior MA+S',
-  other_options: 'Solicita outras opções',
+  medsenior_rj1: "MedSênior RJ1",
+  medsenior_essencial: "MedSênior Essencial",
+  hapvida: "Hapvida (Notrelife)",
+  prevent_senior: "Prevent Senior MA+S",
+  other_options: "Solicita outras opções",
 };
 
+function safeLabel(
+  key: string | null | undefined,
+  dict: Record<string, string>,
+): string {
+  if (!key) return "Não informado";
+  return dict[key] || key;
+}
+
 function generateEmailHTML(data: FormData): string {
-  const titular = data.people.find(p => p.isHolder);
-  const dependentes = data.people.filter(p => !p.isHolder);
-  
+  const titular = data.people.find((p) => p.isHolder);
+  const dependentes = data.people.filter((p) => !p.isHolder);
+
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -81,7 +92,7 @@ function generateEmailHTML(data: FormData): string {
                 Nova Cotação de Plano de Saúde
               </h2>
               <p style="color: #64748b; margin: 10px 0 0; font-size: 14px;">
-                Recebida em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+                Recebida em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}
               </p>
             </td>
           </tr>
@@ -94,9 +105,9 @@ function generateEmailHTML(data: FormData): string {
                   <td style="padding: 15px;">
                     <p style="margin: 0 0 10px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Informações do Plano</p>
                     <p style="margin: 0; color: #0f172a; font-size: 16px;">
-                      <strong>Tipo:</strong> ${data.planType === 'family' ? 'Familiar' : 'Individual'}<br>
+                      <strong>Tipo:</strong> ${data.planType === "family" ? "Familiar" : "Individual"}<br>
                       <strong>Pessoas:</strong> ${data.familySize}<br>
-                      <strong>Plano Escolhido:</strong> <span style="color: #0ea5e9; font-weight: 600;">${PLAN_LABELS[data.selectedPlan || ''] || 'Não selecionado'}</span>
+                      <strong>Plano Escolhido:</strong> <span style="color: #0ea5e9; font-weight: 600;">${PLAN_LABELS[data.selectedPlan || ""] || "Não selecionado"}</span>
                     </p>
                   </td>
                 </tr>
@@ -105,7 +116,9 @@ function generateEmailHTML(data: FormData): string {
           </tr>
           
           <!-- Titular -->
-          ${titular ? `
+          ${
+            titular
+              ? `
           <tr>
             <td style="padding: 0 40px 20px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius: 8px;">
@@ -132,14 +145,20 @@ function generateEmailHTML(data: FormData): string {
               </table>
             </td>
           </tr>
-          ` : ''}
+          `
+              : ""
+          }
           
           <!-- Dependentes -->
-          ${dependentes.length > 0 ? `
+          ${
+            dependentes.length > 0
+              ? `
           <tr>
             <td style="padding: 0 40px 20px;">
               <p style="margin: 0 0 15px; color: #0f172a; font-size: 16px; font-weight: 600;">Dependentes (${dependentes.length})</p>
-              ${dependentes.map((dep, index) => `
+              ${dependentes
+                .map(
+                  (dep, index) => `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #64748b;">
                 <tr>
                   <td style="padding: 15px;">
@@ -152,10 +171,14 @@ function generateEmailHTML(data: FormData): string {
                   </td>
                 </tr>
               </table>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </td>
           </tr>
-          ` : ''}
+          `
+              : ""
+          }
           
           <!-- Contact Preference -->
           <tr>
@@ -165,7 +188,7 @@ function generateEmailHTML(data: FormData): string {
                   <td style="padding: 15px;">
                     <p style="margin: 0 0 5px; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📞 Preferência de Contato</p>
                     <p style="margin: 0; color: #78350f; font-size: 16px; font-weight: 600;">
-                      ${CONTACT_LABELS[data.contactPreference || ''] || 'Não informado'}
+                      ${CONTACT_LABELS[data.contactPreference || ""] || "Não informado"}
                     </p>
                   </td>
                 </tr>
@@ -181,8 +204,8 @@ function generateEmailHTML(data: FormData): string {
                   <td style="padding: 15px;">
                     <p style="margin: 0 0 10px; color: #065f46; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">✅ Consentimentos</p>
                     <p style="margin: 0; color: #047857; font-size: 14px;">
-                      ${data.consentLGPD ? '✓' : '✗'} LGPD - Tratamento de dados pessoais<br>
-                      ${data.consentPartnerAndContact ? '✓' : '✗'} Contato e compartilhamento com parceiros
+                      ${data.consentLGPD ? "✓" : "✗"} LGPD - Tratamento de dados pessoais<br>
+                      ${data.consentPartnerAndContact ? "✓" : "✗"} Contato e compartilhamento com parceiros
                     </p>
                   </td>
                 </tr>
@@ -212,97 +235,144 @@ function generateEmailHTML(data: FormData): string {
 export default async function handler(req: Request): Promise<Response> {
   // CORS headers
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return new Response(
-      JSON.stringify({ success: false, message: 'Method not allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      JSON.stringify({ success: false, message: "Method not allowed" }),
+      {
+        status: 405,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
     );
   }
 
   try {
     const formData: FormData = await req.json();
-    
+
+    // Anti-spam simples (honeypot). Se vier preenchido, ignora.
+    if (formData.website && String(formData.website).trim().length > 0) {
+      return new Response(JSON.stringify({ success: true, message: "OK" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // Validate required fields
     if (!formData.people || formData.people.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Dados do formulário inválidos' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({
+          success: false,
+          message: "Dados do formulário inválidos",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
-    const titular = formData.people.find(p => p.isHolder);
+    const titular = formData.people.find((p) => p.isHolder);
     if (!titular) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Titular não encontrado' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, message: "Titular não encontrado" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
-    // SendGrid API call
-    const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-    const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'contato@quantifyco.com.br';
+    // Web3Forms API call
+    const WEB3FORMS_ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY;
 
-    if (!SENDGRID_API_KEY) {
-      console.error('SENDGRID_API_KEY não configurada');
+    if (!WEB3FORMS_ACCESS_KEY) {
+      console.error("WEB3FORMS_ACCESS_KEY não configurada");
       return new Response(
-        JSON.stringify({ success: false, message: 'Configuração de email não encontrada' }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({
+          success: false,
+          message: "Configuração de email não encontrada",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
     const emailHTML = generateEmailHTML(formData);
-    const planLabel = PLAN_LABELS[formData.selectedPlan || ''] || 'Não selecionado';
+    const planLabel = safeLabel(formData.selectedPlan, PLAN_LABELS);
+    const planTypeLabel =
+      formData.planType === "family"
+        ? "Familiar"
+        : formData.planType === "individual"
+          ? "Individual"
+          : "Não informado";
 
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
+    // Reply-To ideal: email do titular (para responder direto)
+    const replyTo = titular.email || undefined;
+
+    // Payload Web3Forms
+    const payload = {
+      access_key: WEB3FORMS_ACCESS_KEY,
+      subject: `Nova Cotação - ${titular.fullName} - ${planLabel}`,
+      from_name: "Quantify - Sistema de Cotações",
+      replyto: replyTo,
+      message: emailHTML,
+
+      // Campos adicionais (opcional)
+      planType: planTypeLabel,
+      familySize: String(formData.familySize),
+      contactPreference: safeLabel(formData.contactPreference, CONTACT_LABELS),
+      titular: titular.fullName,
+      titularPhone: titular.phone,
+      titularEmail: titular.email,
+      titularCity: `${titular.city} - ${titular.state}`,
+    };
+
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        personalizations: [{
-          to: [{ email: RECIPIENT_EMAIL }],
-          subject: `Nova Cotação - ${titular.fullName} - ${planLabel}`,
-        }],
-        from: {
-          email: 'noreply@quantifyco.com.br',
-          name: 'Quantify - Sistema de Cotações',
-        },
-        content: [{
-          type: 'text/html',
-          value: emailHTML,
-        }],
-      }),
+      body: JSON.stringify(payload),
     });
 
+    const resultText = await response.text();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('SendGrid error:', errorText);
+      console.error("Web3Forms error:", response.status, resultText);
       return new Response(
-        JSON.stringify({ success: false, message: 'Erro ao enviar email' }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, message: "Erro ao enviar email" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email enviado com sucesso' }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      JSON.stringify({ success: true, message: "Email enviado com sucesso" }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
     );
-
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ success: false, message: 'Erro interno do servidor' }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      JSON.stringify({ success: false, message: "Erro interno do servidor" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
     );
   }
 }
