@@ -236,67 +236,70 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // Helper para extrair texto simples do HTML
 function htmlToPlainText(html: string): string {
   return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 // Helper para criar FormData compatível com Node.js
 function createFormDataPayload(data: Record<string, string>): string {
   return Object.entries(data)
-    .map(([key, value]) => 
-      `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
     )
-    .join('&');
+    .join("&");
 }
 
 // Envio secundário para FormSubmit (não bloqueia o principal)
 async function sendToFormSubmit(
   emailHTML: string,
   subject: string,
-  titular: any
+  titular: any,
 ): Promise<void> {
   try {
-    const formSubmitEmail = process.env.RECIPIENT_EMAIL || 'rosacode9@gmail.com';
-    
+    const formSubmitEmail =
+      process.env.RECIPIENT_EMAIL || "rosacode9@gmail.com";
+
     // Preparar dados em formato application/x-www-form-urlencoded
     const formData: Record<string, string> = {
       subject: subject,
       message: emailHTML,
-      _replyto: titular.email || '',
-      _template: 'box', // Template básico do FormSubmit
-      _captcha: 'false', // Desabilita captcha (já temos validação)
+      _replyto: titular.email || "",
+      _template: "box", // Template básico do FormSubmit
+      _captcha: "false", // Desabilita captcha (já temos validação)
     };
 
     const formDataString = createFormDataPayload(formData);
 
     const response = await fetch(`https://formsubmit.co/${formSubmitEmail}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
       body: formDataString,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('FormSubmit error:', response.status, errorText);
+      console.error("FormSubmit error:", response.status, errorText);
     } else {
-      console.log('FormSubmit: Email enviado com sucesso (secundário)');
+      console.log("FormSubmit: Email enviado com sucesso (secundário)");
     }
   } catch (error) {
     // Apenas loga o erro, não interrompe o fluxo
-    console.error('FormSubmit failed (non-blocking):', error);
+    console.error("FormSubmit failed (non-blocking):", error);
   }
 }
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -394,10 +397,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Origin": "https://quantifyhealth.vercel.app",
-        "Referer": "https://quantifyhealth.vercel.app/",
+        Accept: "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Origin: "https://quantifyhealth.vercel.app",
+        Referer: "https://quantifyhealth.vercel.app/",
       },
       body: JSON.stringify(payload),
     });
@@ -431,9 +435,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sendToFormSubmit(
       emailHTML,
       `Nova Cotação - ${titular.fullName} - ${planLabel}`,
-      titular
-    ).catch(err => {
-      console.error('FormSubmit background error:', err);
+      titular,
+    ).catch((err) => {
+      console.error("FormSubmit background error:", err);
     });
 
     // ========================================
