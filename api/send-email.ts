@@ -232,62 +232,50 @@ function generateEmailHTML(data: FormData): string {
   `;
 }
 
-export default async function handler(req: Request): Promise<Response> {
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "content-type");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return res.status(200).end();
   }
 
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ success: false, message: "Method not allowed" }),
-      {
-        status: 405,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      },
-    );
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed",
+    });
   }
 
   try {
-    const formData: FormData = await req.json();
+    const formData: FormData = req.body;
 
     // Anti-spam simples (honeypot). Se vier preenchido, ignora.
     if (formData.website && String(formData.website).trim().length > 0) {
-      return new Response(JSON.stringify({ success: true, message: "OK" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      return res.status(200).json({
+        success: true,
+        message: "OK",
       });
     }
 
     // Validate required fields
     if (!formData.people || formData.people.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Dados do formulário inválidos",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        },
-      );
+      return res.status(400).json({
+        success: false,
+        message: "Dados do formulário inválidos",
+      });
     }
 
     const titular = formData.people.find((p) => p.isHolder);
     if (!titular) {
-      return new Response(
-        JSON.stringify({ success: false, message: "Titular não encontrado" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        },
-      );
+      return res.status(400).json({
+        success: false,
+        message: "Titular não encontrado",
+      });
     }
 
     // Web3Forms API call
@@ -295,16 +283,10 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (!WEB3FORMS_ACCESS_KEY) {
       console.error("WEB3FORMS_ACCESS_KEY não configurada");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Configuração de email não encontrada",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        },
-      );
+      return res.status(500).json({
+        success: false,
+        message: "Configuração de email não encontrada",
+      });
     }
 
     const emailHTML = generateEmailHTML(formData);
@@ -319,14 +301,13 @@ export default async function handler(req: Request): Promise<Response> {
     // Reply-To ideal: email do titular (para responder direto)
     const replyTo = titular.email || undefined;
 
-    // Payload Web3Forms
-    const payload = {
+    // Payload Web3Forms - enviando como JSON
+    const payload: Record<string, any> = {
       access_key: WEB3FORMS_ACCESS_KEY,
       subject: `Nova Cotação - ${titular.fullName} - ${planLabel}`,
       from_name: "Quantify - Sistema de Cotações",
-      replyto: replyTo,
       message: emailHTML,
-
+      
       // Campos adicionais (opcional)
       planType: planTypeLabel,
       familySize: String(formData.familySize),
@@ -337,10 +318,15 @@ export default async function handler(req: Request): Promise<Response> {
       titularCity: `${titular.city} - ${titular.state}`,
     };
 
+    if (replyTo) {
+      payload.replyto = replyTo;
+    }
+
     const response = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
       body: JSON.stringify(payload),
     });
@@ -349,30 +335,21 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (!response.ok) {
       console.error("Web3Forms error:", response.status, resultText);
-      return new Response(
-        JSON.stringify({ success: false, message: "Erro ao enviar email" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        },
-      );
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao enviar email",
+      });
     }
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Email enviado com sucesso" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      },
-    );
+    return res.status(200).json({
+      success: true,
+      message: "Email enviado com sucesso",
+    });
   } catch (error) {
     console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ success: false, message: "Erro interno do servidor" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      },
-    );
+    return res.status(500).json({
+      success: false,
+      message: "Erro interno do servidor",
+    });
   }
 }
