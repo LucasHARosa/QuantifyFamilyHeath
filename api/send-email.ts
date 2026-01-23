@@ -88,7 +88,7 @@ function generateEmailHTML(data: FormData): string {
           <!-- Title -->
           <tr>
             <td style="padding: 30px 40px 20px;">
-              <h2 style="color: #0f172a; margin: 0; font-size: 22px; border-left: 4px solid #0ea5e9; padding-left: 15px;">
+              <h2 style="color: #0f172a; margin: 0; font-size: 22px; border-left: 4px solid #64748b; padding-left: 15px;">
                 Nova Cotação de Plano de Saúde
               </h2>
               <p style="color: #64748b; margin: 10px 0 0; font-size: 14px;">
@@ -107,37 +107,37 @@ function generateEmailHTML(data: FormData): string {
                     <p style="margin: 0; color: #0f172a; font-size: 16px;">
                       <strong>Tipo:</strong> ${data.planType === "family" ? "Familiar" : "Individual"}<br>
                       <strong>Pessoas:</strong> ${data.familySize}<br>
-                      <strong>Plano Escolhido:</strong> <span style="color: #0ea5e9; font-weight: 600;">${PLAN_LABELS[data.selectedPlan || ""] || "Não selecionado"}</span>
+                      <strong>Plano Escolhido:</strong> <span style="color: #334155; font-weight: 600;">${PLAN_LABELS[data.selectedPlan || ""] || "Não selecionado"}</span>
                     </p>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-          
+
           <!-- Titular -->
           ${
             titular
               ? `
           <tr>
             <td style="padding: 0 40px 20px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius: 8px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border: 2px solid #e2e8f0; border-radius: 8px;">
                 <tr>
                   <td style="padding: 20px;">
-                    <p style="margin: 0 0 5px; color: rgba(255,255,255,0.8); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">👑 Titular / Responsável</p>
-                    <h3 style="margin: 0 0 15px; color: #ffffff; font-size: 20px;">${titular.fullName}</h3>
+                    <p style="margin: 0 0 5px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">👑 Titular / Responsável</p>
+                    <h3 style="margin: 0 0 15px; color: #0f172a; font-size: 20px;">${titular.fullName}</h3>
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                       <tr>
-                        <td style="color: rgba(255,255,255,0.9); font-size: 14px; padding: 3px 0;">📅 ${titular.birthDate}</td>
+                        <td style="color: #475569; font-size: 14px; padding: 3px 0;">📅 ${titular.birthDate}</td>
                       </tr>
                       <tr>
-                        <td style="color: rgba(255,255,255,0.9); font-size: 14px; padding: 3px 0;">📱 ${titular.phone}</td>
+                        <td style="color: #475569; font-size: 14px; padding: 3px 0;">📱 ${titular.phone}</td>
                       </tr>
                       <tr>
-                        <td style="color: rgba(255,255,255,0.9); font-size: 14px; padding: 3px 0;">✉️ ${titular.email}</td>
+                        <td style="color: #475569; font-size: 14px; padding: 3px 0;">✉️ ${titular.email}</td>
                       </tr>
                       <tr>
-                        <td style="color: rgba(255,255,255,0.9); font-size: 14px; padding: 3px 0;">📍 ${titular.city} - ${titular.state}</td>
+                        <td style="color: #475569; font-size: 14px; padding: 3px 0;">📍 ${titular.city} - ${titular.state}</td>
                       </tr>
                     </table>
                   </td>
@@ -183,11 +183,11 @@ function generateEmailHTML(data: FormData): string {
           <!-- Contact Preference -->
           <tr>
             <td style="padding: 0 40px 20px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fef3c7; border-radius: 8px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px;">
                 <tr>
                   <td style="padding: 15px;">
-                    <p style="margin: 0 0 5px; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📞 Preferência de Contato</p>
-                    <p style="margin: 0; color: #78350f; font-size: 16px; font-weight: 600;">
+                    <p style="margin: 0 0 5px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📞 Preferência de Contato</p>
+                    <p style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">
                       ${CONTACT_LABELS[data.contactPreference || ""] || "Não informado"}
                     </p>
                   </td>
@@ -195,15 +195,15 @@ function generateEmailHTML(data: FormData): string {
               </table>
             </td>
           </tr>
-          
+
           <!-- Consents -->
           <tr>
             <td style="padding: 0 40px 30px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ecfdf5; border-radius: 8px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px;">
                 <tr>
                   <td style="padding: 15px;">
-                    <p style="margin: 0 0 10px; color: #065f46; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">✅ Consentimentos</p>
-                    <p style="margin: 0; color: #047857; font-size: 14px;">
+                    <p style="margin: 0 0 10px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">✅ Consentimentos</p>
+                    <p style="margin: 0; color: #475569; font-size: 14px;">
                       ${data.consentLGPD ? "✓" : "✗"} LGPD - Tratamento de dados pessoais<br>
                       ${data.consentPartnerAndContact ? "✓" : "✗"} Contato e compartilhamento com parceiros
                     </p>
