@@ -11,21 +11,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-    proxy: {
-      "/api": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        configure: (proxy, options) => {
-          // Middleware para simular serverless function localmente
-          proxy.on("error", (err, req, res) => {
-            console.log("Proxy error:", err);
-          });
-          proxy.on("proxyReq", (proxyReq, req, res) => {
-            console.log("Proxying:", req.method, req.url);
-          });
-        },
-      },
-    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(
     Boolean,
@@ -33,21 +18,6 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  build: {
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-select",
-            "@radix-ui/react-checkbox",
-          ],
-        },
-      },
     },
   },
 }));
