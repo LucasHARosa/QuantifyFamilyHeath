@@ -19,7 +19,7 @@ export const HeroSection = () => {
         >
           <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
             Sua saúde merece<br />
-            <span className="text-accent">inteligência</span>, não apenas uma corretora.
+            <span className="text-accent">inteligência</span>, não apenas uma corretora
           </h1>
           
           <p className="text-primary-foreground/80 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
