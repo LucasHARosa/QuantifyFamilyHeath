@@ -13,16 +13,19 @@ interface PersonData {
   email: string;
   state: string;
   city: string;
+  profession?: string;
 }
 
 interface FormData {
-  planType: "individual" | "family" | null;
+  planType: "individual" | "family" | "mei" | null;
   familySize: number;
   people: PersonData[];
   contactPreference: "whatsapp" | "telegram" | "phone" | null;
   consentLGPD: boolean;
   consentPartnerAndContact: boolean;
   selectedPlan: string | null;
+  hasMEI?: boolean;
+  primaryProfession?: string;
 
   // Anti-spam (honeypot)
   website?: string;
@@ -35,6 +38,16 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
   pai: "Pai",
   mae: "Mãe",
   outro: "Outro",
+};
+
+const PROFESSION_LABELS: Record<string, string> = {
+  employee: "Empregado(a)",
+  entrepreneur: "Empreendedor(a)",
+  autonomous: "Autônomo(a)",
+  liberal: "Profissional Liberal",
+  retired: "Aposentado(a)",
+  student: "Estudante",
+  other: "Outro",
 };
 
 const CONTACT_LABELS: Record<string, string> = {
@@ -105,15 +118,57 @@ function generateEmailHTML(data: FormData): string {
                   <td style="padding: 15px;">
                     <p style="margin: 0 0 10px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Informações do Plano</p>
                     <p style="margin: 0; color: #0f172a; font-size: 16px;">
-                      <strong>Tipo:</strong> ${data.planType === "family" ? "Familiar" : "Individual"}<br>
+                      <strong>Tipo:</strong> ${
+                        data.planType === "family" ? "Familiar" : 
+                        data.planType === "mei" ? "MEI/Empresarial" : 
+                        "Individual"
+                      }<br>
                       <strong>Pessoas:</strong> ${data.familySize}<br>
-                      <strong>Plano Escolhido:</strong> <span style="color: #334155; font-weight: 600;">${PLAN_LABELS[data.selectedPlan || ""] || "Não selecionado"}</span>
+                      ${data.primaryProfession ? `<strong>Profissão:</strong> ${PROFESSION_LABELS[data.primaryProfession] || data.primaryProfession}<br>` : ''}
+                      ${data.hasMEI ? `<strong>MEI/CNPJ:</strong> Sim<br>` : ''}
                     </p>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
+          <!-- Oportunidades de Redução de Custo -->
+          ${
+            data.primaryProfession === 'employee' || 
+            data.primaryProfession === 'autonomous' || 
+            data.primaryProfession === 'liberal' ||
+            data.hasMEI
+              ? `
+          <tr>
+            <td style="padding: 0 40px 20px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 8px; padding: 20px;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0 0 10px; color: #047857; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">💰 Oportunidade de Redução de Custo</p>
+                    <p style="margin: 0; color: #065f46; font-size: 14px;">
+                      ${
+                        data.hasMEI
+                          ? '✓ Elegível para <strong>Plano Empresarial/MEI</strong> com custos otimizados'
+                          : ''
+                      }
+                      ${
+                        (data.primaryProfession === 'employee' || 
+                         data.primaryProfession === 'autonomous' || 
+                         data.primaryProfession === 'liberal') && !data.hasMEI
+                          ? '✓ Pode ter acesso a <strong>Planos por Adesão</strong> com descontos para sua categoria profissional'
+                          : ''
+                      }
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+              `
+              : ''
+          }
+
 
           <!-- Titular -->
           ${

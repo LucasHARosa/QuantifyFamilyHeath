@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FormData, PersonData, PlanType, ContactPreference, SelectedPlan } from '@/types/form';
+import { FormData, PersonData, PlanType, ContactPreference, SelectedPlan, Profession } from '@/types/form';
 
 const createEmptyPerson = (id: string, isHolder: boolean): PersonData => ({
   id,
@@ -12,6 +12,7 @@ const createEmptyPerson = (id: string, isHolder: boolean): PersonData => ({
   emailConfirmation: '',
   state: '',
   city: '',
+  profession: null,
 });
 
 const initialFormData: FormData = {
@@ -22,6 +23,8 @@ const initialFormData: FormData = {
   consentLGPD: false,
   consentPartnerAndContact: false,
   selectedPlan: null,
+  hasMEI: false,
+  primaryProfession: null,
 };
 
 export const useFormWizard = () => {
@@ -31,19 +34,20 @@ export const useFormWizard = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [wantsOtherOptions, setWantsOtherOptions] = useState(false);
 
-  // Steps: 0=PlanType, 1=FamilySize(family only), 2=PersonData, 3=Consent, 4=PlanSelection
-  const totalSteps = formData.planType === 'family' ? 5 : 4;
+  // Steps: 0=PlanType, 1=Profissão/MEI (all types), 2=FamilySize(family/MEI only), 3=PersonData, 4=Consent
+  const totalSteps = formData.planType === 'individual' ? 4 : 5;
 
   const setPlanType = useCallback((type: PlanType) => {
     setFormData(prev => ({
       ...prev,
       planType: type,
-      familySize: type === 'individual' ? 1 : 2,
+      familySize: type === 'individual' ? 1 : (type === 'mei' ? 2 : 2),
       people: type === 'individual' 
         ? [createEmptyPerson('person-1', true)]
         : [createEmptyPerson('person-1', true), createEmptyPerson('person-2', false)],
+      hasMEI: type === 'mei' ? true : false,
     }));
-    setCurrentStep(type === 'individual' ? 2 : 1);
+    setCurrentStep(1); // Next step: Profissão/MEI
   }, []);
 
   const setFamilySize = useCallback((size: number) => {
@@ -65,7 +69,27 @@ export const useFormWizard = () => {
         people: newPeople,
       };
     });
-    setCurrentStep(2);
+    setCurrentStep(3); // Next: PersonData
+  }, []);
+
+  const setHasMEI = useCallback((hasMEI: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      hasMEI,
+      // Se MEI precisa de pelo menos 2 vidas
+      familySize: hasMEI ? Math.max(prev.familySize, 2) : prev.familySize,
+    }));
+  }, []);
+
+  const setPrimaryProfession = useCallback((profession: Profession) => {
+    setFormData(prev => ({
+      ...prev,
+      primaryProfession: profession,
+      // Também atualizar a profissão do titular
+      people: prev.people.map(person =>
+        person.isHolder ? { ...person, profession } : person
+      ),
+    }));
   }, []);
 
   const updatePerson = useCallback((personId: string, updates: Partial<PersonData>) => {
@@ -82,6 +106,7 @@ export const useFormWizard = () => {
       ...prev,
       contactPreference: preference,
     }));
+    // Continue to submit
   }, []);
 
   const updateConsent = useCallback((field: 'consentLGPD' | 'consentPartnerAndContact', value: boolean) => {
@@ -153,8 +178,13 @@ export const useFormWizard = () => {
       case 0:
         return formData.planType !== null;
       case 1:
-        return formData.familySize >= 2;
+        // Profissão/MEI - sempre válido
+        return true;
       case 2:
+        // FamilySize - válido se >= 2 (Family/MEI)
+        return formData.familySize >= 2;
+      case 3:
+        // PersonData
         return formData.people.every(person => {
           const isValid = 
             person.fullName.trim().length >= 3 &&
@@ -166,10 +196,9 @@ export const useFormWizard = () => {
             person.city.trim().length >= 2;
           return isValid;
         });
-      case 3:
-        return formData.consentLGPD && formData.consentPartnerAndContact && formData.contactPreference !== null;
       case 4:
-        return formData.selectedPlan !== null;
+        // Consent
+        return formData.consentLGPD && formData.consentPartnerAndContact && formData.contactPreference !== null;
       default:
         return false;
     }
@@ -184,6 +213,8 @@ export const useFormWizard = () => {
     wantsOtherOptions,
     setPlanType,
     setFamilySize,
+    setHasMEI,
+    setPrimaryProfession,
     updatePerson,
     setContactPreference,
     updateConsent,

@@ -15,7 +15,7 @@ export const Header = () => {
             <p className="text-xs text-muted-foreground">Consultoria em Saúde</p>
           </div>
         </div>
-        <span className="text-xs text-muted-foreground hidden sm:block">Metroviários</span>
+        <span className="text-xs text-muted-foreground hidden sm:block">Consultoria em Inteligência em Saúde</span>
       </div>
     </header>
   );

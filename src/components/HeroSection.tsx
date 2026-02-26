@@ -18,22 +18,15 @@ export const HeroSection = () => {
           className="text-center space-y-6"
         >
           <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
-            Sua saúde merece<br />
-            <span className="text-accent">inteligência</span>, não apenas uma corretora
+            O plano de saúde ideal para sua realidade,<br />
+            desenhado por especialistas em <span className="text-accent">inteligência de dados</span>
           </h1>
           
           <p className="text-primary-foreground/80 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            A Quantify é uma consultoria especializada em gestão de saúde. 
-            Nosso objetivo é encontrar a solução por meio de um plano de saúde mais aderente e econômico para você e sua família.
+            Não somos apenas uma corretora. Somos uma consultoria técnica que analisa o mercado para encontrar a opção mais adequada às suas necessidades, rede de atendimento e capacidade de pagamento.
           </p>
 
-          <div className="bg-accent/20 backdrop-blur-sm rounded-lg px-6 py-3 inline-block">
-            <p className="text-sm sm:text-base font-medium">
-              💡 Planos para <span className="text-accent font-bold">59 anos ou mais</span> a partir de{' '}
-              <span className="text-accent font-bold">R$ 1.012/mês</span>
-            </p>
-          </div>
-
+          {/* destaque de senior removido */}
           <div className="flex flex-wrap justify-center gap-4 pt-4">
             {features.map((feature, index) => (
               <motion.div

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { User, Users } from 'lucide-react';
+import { User, Users, Building2 } from 'lucide-react';
 import { PlanType } from '@/types/form';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +21,12 @@ export const PlanTypeStep = ({ onSelect }: PlanTypeStepProps) => {
       title: 'Família',
       description: 'Inclui você e seus dependentes',
     },
+    {
+      type: 'mei' as PlanType,
+      icon: Building2,
+      title: 'MEI/Empresarial',
+      description: 'Plano para sócios e empresa',
+    },
   ];
 
   return (
@@ -33,14 +39,14 @@ export const PlanTypeStep = ({ onSelect }: PlanTypeStepProps) => {
     >
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          O plano é apenas para você ou para sua família?
+          Qual tipo de plano você busca?
         </h2>
         <p className="text-muted-foreground">
-          Selecione a opção que melhor se aplica
+          Selecione a opção que melhor se aplica ao seu caso
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3 sm:grid-cols-2">
         {options.map((option, index) => (
           <motion.button
             key={option.type}

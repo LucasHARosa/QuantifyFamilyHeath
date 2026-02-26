@@ -1,8 +1,18 @@
-export type PlanType = 'individual' | 'family' | null;
+export type PlanType = 'individual' | 'family' | 'mei' | null;
 
 export type ContactPreference = 'whatsapp' | 'telegram' | 'phone' | null;
 
 export type SelectedPlan = 'medsenior_rj1' | 'medsenior_essencial' | 'hapvida' | 'prevent_senior' | 'other_options' | null;
+
+export type Profession = 
+  | 'employee'           // Empregado(a)
+  | 'entrepreneur'       // Empreendedor(a)
+  | 'autonomous'         // Autônomo(a)
+  | 'liberal'            // Profissional Liberal
+  | 'retired'            // Aposentado(a)
+  | 'student'            // Estudante
+  | 'other'              // Outro
+  | null;
 
 export type RelationshipType = 
   | 'titular'
@@ -29,6 +39,7 @@ export interface PersonData {
   emailConfirmation: string;
   state: string;
   city: string;
+  profession?: Profession;
 }
 
 export interface FormData {
@@ -39,6 +50,8 @@ export interface FormData {
   consentLGPD: boolean;
   consentPartnerAndContact: boolean;
   selectedPlan: SelectedPlan;
+  hasMEI?: boolean;
+  primaryProfession?: Profession;
 }
 
 export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
@@ -54,6 +67,37 @@ export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   nora_genro: 'Nora/Genro',
   cunhado: 'Cunhado(a)',
   outros: 'Outros (até 4º grau)',
+};
+
+export const PROFESSION_LABELS: Record<Exclude<Profession, null>, { label: string; hint: string }> = {
+  employee: { 
+    label: 'Empregado(a)', 
+    hint: 'Pode ter acesso a planos coletivos por adesão com custos reduzidos' 
+  },
+  entrepreneur: { 
+    label: 'Empreendedor(a)', 
+    hint: 'Pode estruturar plano empresarial ou MEI' 
+  },
+  autonomous: { 
+    label: 'Autônomo(a)', 
+    hint: 'Pode ter acesso a planos coletivos por adesão' 
+  },
+  liberal: { 
+    label: 'Profissional Liberal', 
+    hint: 'Pode ter acesso a planos coletivos por categoria profissional' 
+  },
+  retired: { 
+    label: 'Aposentado(a)', 
+    hint: 'Dispomos de especial expertise em planos voltados ao público sênior' 
+  },
+  student: { 
+    label: 'Estudante', 
+    hint: 'Pode ter acesso a planos com desconto especial' 
+  },
+  other: { 
+    label: 'Outro', 
+    hint: '' 
+  },
 };
 
 export const CONTACT_PREFERENCE_LABELS: Record<Exclude<ContactPreference, null>, { label: string; icon: string }> = {
@@ -146,15 +190,4 @@ export const PLAN_OPTIONS: PlanOption[] = [
   },
 ];
 
-export const PRICE_TABLE = [
-  { faixa: '0 a 18', hapvida: 252.04, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '19 a 23', hapvida: 276.54, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '24 a 28', hapvida: 284.21, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '29 a 33', hapvida: 315.78, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '34 a 38', hapvida: 326.33, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '39 a 43', hapvida: 358.98, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 883.53 },
-  { faixa: '44 a 48', hapvida: 511.09, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 1162.60 },
-  { faixa: '49 a 53', hapvida: 518.69, medsenior_essencial: 753.23, medsenior_rj1: 900.82, prevent_senior: 1162.60 },
-  { faixa: '54 a 58', hapvida: 657.53, medsenior_essencial: 903.88, medsenior_rj1: 1080.98, prevent_senior: 1162.60 },
-  { faixa: '59 ou +', hapvida: 1012.61, medsenior_essencial: 1184.08, medsenior_rj1: 1416.08, prevent_senior: 1529.75, highlighted: true },
-];
+
