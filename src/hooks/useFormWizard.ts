@@ -27,6 +27,64 @@ const initialFormData: FormData = {
   primaryProfession: null,
 };
 
+// helper exported for testing or external validation
+export const validateStep = (formData: FormData, currentStep: number): boolean => {
+  switch (currentStep) {
+    case 0:
+      return formData.planType !== null;
+    case 1:
+      // Profissão/MEI - sempre válido
+      return true;
+    case 2:
+      // Individual plans skip the family-size step and show the person-data step
+      if (formData.planType === 'individual') {
+        return formData.people.every(person => {
+          const isValid = 
+            person.fullName.trim().length >= 3 &&
+            person.birthDate.length === 10 &&
+            person.phone.replace(/\D/g, '').length >= 10 &&
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email) &&
+            person.email === person.emailConfirmation &&
+            person.state !== '' &&
+            person.city.trim().length >= 2;
+          return isValid;
+        });
+      }
+      // Family/MEI flow: validate family size
+      return formData.familySize >= 2;
+    case 3:
+      if (formData.planType === 'individual') {
+        // this is the consent step for individual flow
+        return (
+          formData.consentLGPD &&
+          formData.consentPartnerAndContact &&
+          formData.contactPreference !== null
+        );
+      }
+      // in family/MEI flow currentStep 3 is still the person-data step
+      return formData.people.every(person => {
+        const isValid = 
+          person.fullName.trim().length >= 3 &&
+          person.birthDate.length === 10 &&
+          person.phone.replace(/\D/g, '').length >= 10 &&
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email) &&
+          person.email === person.emailConfirmation &&
+          person.state !== '' &&
+          person.city.trim().length >= 2;
+        return isValid;
+      });
+    case 4:
+      // Only reachable in family/MEI flow and corresponds to consent
+      return (
+        formData.consentLGPD &&
+        formData.consentPartnerAndContact &&
+        formData.contactPreference !== null
+      );
+    default:
+      return false;
+  }
+};
+
 export const useFormWizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -174,34 +232,7 @@ export const useFormWizard = () => {
   }, [formData]);
 
   const validateCurrentStep = useCallback((): boolean => {
-    switch (currentStep) {
-      case 0:
-        return formData.planType !== null;
-      case 1:
-        // Profissão/MEI - sempre válido
-        return true;
-      case 2:
-        // FamilySize - válido se >= 2 (Family/MEI)
-        return formData.familySize >= 2;
-      case 3:
-        // PersonData
-        return formData.people.every(person => {
-          const isValid = 
-            person.fullName.trim().length >= 3 &&
-            person.birthDate.length === 10 &&
-            person.phone.replace(/\D/g, '').length >= 10 &&
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email) &&
-            person.email === person.emailConfirmation &&
-            person.state !== '' &&
-            person.city.trim().length >= 2;
-          return isValid;
-        });
-      case 4:
-        // Consent
-        return formData.consentLGPD && formData.consentPartnerAndContact && formData.contactPreference !== null;
-      default:
-        return false;
-    }
+    return validateStep(formData, currentStep);
   }, [currentStep, formData]);
 
   return {

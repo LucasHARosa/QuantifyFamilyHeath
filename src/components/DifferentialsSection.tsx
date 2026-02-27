@@ -5,18 +5,18 @@ export const DifferentialsSection = () => {
   const items = [
     {
       icon: ClipboardCheck,
-      title: 'Curadoria Independente',
-      description: 'Não somos vinculados a uma única operadora. Comparamos o mercado para você.',
+      title: 'Avaliação Completa das Operadoras',
+      description: 'Analisamos o desempenho real de cada operadora na ANS, volume de reclamações e indicadores de satisfação. Você escolhe com total transparência.',
     },
     {
       icon: ChartBar,
-      title: 'Análise Atuarial',
-      description: 'Avaliamos risco e sustentabilidade para garantir planos sólidos e duradouros.',
+      title: 'Rede Credenciada Verificada',
+      description: 'Avaliamos a rede de atendimento através da plataforma Reclame Aqui para garantir que você terá acesso rápido e de qualidade aos melhores hospitais e clínicas.',
     },
     {
       icon: Heart,
-      title: 'Foco no Beneficiário',
-      description: 'Buscamos equilíbrio entre rede credenciada e orçamento, com você em primeiro lugar.',
+      title: 'Melhor Custo-Benefício para Você',
+      description: 'Buscamos os planos com as melhores cotações do mercado, sem abrir mão da qualidade. Seu bem-estar com o melhor preço é nossa missão.',
     },
   ];
 
@@ -38,8 +38,9 @@ export const DifferentialsSection = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-muted-foreground max-w-xl mx-auto"
         >
-          Somos uma consultoria técnica que une dados, mercado e experiência para
-          entregar a melhor solução em saúde para cada perfil.
+          Somos uma empresa especializada em analisar cada detalhe dos planos de saúde 
+          para você encontrar a opção ideal. Avaliamos investimentos, reputação das operadoras 
+          e qualidade da rede para apresentar apenas o melhor.
         </motion.p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
