@@ -1,73 +1,48 @@
-# Welcome to your Lovable project
+![GitHub repo size](https://img.shields.io/github/repo-size/LucasHARosa/QuantifyFamilyHeath)
+![GitHub language count](https://img.shields.io/github/languages/count/LucasHARosa/QuantifyFamilyHeath)
+![GitHub top language](https://img.shields.io/github/languages/top/LucasHARosa/QuantifyFamilyHeath)
+![GitHub last commit](https://img.shields.io/github/last-commit/LucasHARosa/QuantifyFamilyHeath)
 
-## Project info
+# Quantify Family Health
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Landing page para **captação de clientes de planos de saúde**, com foco em **conversão**, **performance** e **SEO**.  
+Projeto pensado para ser simples de manter e fácil de adaptar para novas campanhas, ofertas e públicos.
 
-## How can I edit this code?
+## Visão geral
 
-There are several ways of editing your application.
+- Página focada em conversão (CTA claro, seções objetivas e formulário de contato)
+- Estrutura pronta para campanhas (Google Ads, Meta Ads, tráfego orgânico)
+- Responsiva (mobile-first)
+- Fácil integração com e-mail, WhatsApp e/ou CRM
 
-**Use Lovable**
+## Demo
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Website: https://quantifyhealth.vercel.app
 
-Changes made via Lovable will be committed automatically to this repo.
+## Funcionalidades
 
-**Use your preferred IDE**
+- Seções institucionais (benefícios, cobertura, diferenciais, FAQ, depoimentos/credibilidade)
+- CTA para contato (botão e/ou formulário)
+- Estrutura preparada para SEO (títulos, descrições e boas práticas)
+- Componentes reutilizáveis para criar novas páginas/variações
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Rodando localmente
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Instale as dependências:
 
-Follow these steps:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Execute em modo desenvolvimento:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+<div align="center">
+    
+[![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com) &nbsp;
+[![forthebadge](https://forthebadge.com/images/badges/made-with-typescript.svg)](https://forthebadge.com) &nbsp;
+[![forthebadge](https://forthebadge.com/images/badges/open-source.svg)](https://forthebadge.com) 
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+</div>
